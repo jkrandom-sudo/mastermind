@@ -28,6 +28,23 @@ class TestSettings(unittest.TestCase):
             self.assertEqual(s["lang"], "en")
             self.assertFalse(s["sound"])
 
+    def test_load_resets_invalid_persisted_values(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "x.json"
+            p.write_text(
+                '{"lang":"xx","sound":"yes","volume":99,"difficulty":"extreme"}',
+                encoding="utf-8",
+            )
+            self.assertEqual(settings_mod.load(p), settings_mod.DEFAULTS)
+
+    def test_load_rejects_bool_volume(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d) / "x.json"
+            p.write_text('{"volume":true}', encoding="utf-8")
+            volume = settings_mod.load(p)["volume"]
+            self.assertIs(type(volume), int)
+            self.assertEqual(volume, settings_mod.DEFAULTS["volume"])
+
     def test_difficulty_table_complete(self):
         for k in ("easy", "normal", "hard"):
             self.assertIn(k, settings_mod.DIFFICULTY)

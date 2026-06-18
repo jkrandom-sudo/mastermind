@@ -33,7 +33,27 @@ def load(path: Path = None) -> Dict[str, Any]:
                         s[k] = data[k]
         except (OSError, json.JSONDecodeError):
             pass
-    return s
+    return _validated(s)
+
+
+def _validated(settings: Dict[str, Any]) -> Dict[str, Any]:
+    """Return settings with invalid persisted values reset to safe defaults."""
+    out = dict(DEFAULTS)
+
+    if settings.get("lang") in {"zh", "en"}:
+        out["lang"] = settings["lang"]
+    if isinstance(settings.get("sound"), bool):
+        out["sound"] = settings["sound"]
+    if (
+        isinstance(settings.get("volume"), int)
+        and not isinstance(settings["volume"], bool)
+        and 0 <= settings["volume"] <= 3
+    ):
+        out["volume"] = settings["volume"]
+    if settings.get("difficulty") in DIFFICULTY:
+        out["difficulty"] = settings["difficulty"]
+
+    return out
 
 
 def save(settings: Dict[str, Any], path: Path = None) -> None:
